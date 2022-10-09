@@ -34,7 +34,11 @@ export class StudentService {
       postalAddress: studentRequest.address.postalAddress,
     }
 
-    return this.httpClient.put<Student>(this.baseApiUrl + '/students/' + studentId, updateStudentRequest);
+    return this.httpClient.post<Student>(this.baseApiUrl + '/students/' + studentId, updateStudentRequest);
 
+  }
+
+  deleteStudent(studentId: string): Observable<Student>{
+    return this.httpClient.delete<Student>(this.baseApiUrl + '/students/' + studentId)
   }
 }
