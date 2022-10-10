@@ -14,6 +14,7 @@ import { StudentService } from '../student.service';
 export class ViewStudentComponent implements OnInit {
 
   studentId: string | null | undefined;
+
   student: Student = {
     id: '',
     firstName: '',
@@ -32,7 +33,12 @@ export class ViewStudentComponent implements OnInit {
       physicalAddress: '',
       postalAddress: ''
     }
-  }
+  };
+
+  isNewStudent = false;
+  header = '';
+  displayProfileImageUrl = '';
+
   genderList: Gender[] = [];
 
 
@@ -49,12 +55,27 @@ export class ViewStudentComponent implements OnInit {
 
         if(this.studentId)
         {
-          this.studentService.getStudent(this.studentId)
+           if(this.studentId.toLowerCase() === 'Add'.toLowerCase())
+            {
+                this.isNewStudent = true;
+                this.header = 'Add New Student';
+                this.setImage();
+            }
+            else{
+                this.isNewStudent = false;
+                this.header = 'Edit Student';
+
+                this.studentService.getStudent(this.studentId)
           .subscribe(
             (successResponce) => {
               this.student = successResponce;
+              this.setImage();
+            },
+            (errorResponse) => {
+              this.setImage();
             }
           );
+             }
 
           this.genderService.getGenderList()
           .subscribe(
@@ -99,5 +120,53 @@ export class ViewStudentComponent implements OnInit {
 
       }
     );
+  }
+
+  onAdd(): void {
+    this.studentService.addStudent(this.student)
+    .subscribe(
+      (successResponse) => {
+        this.snackbar.open('Student added successfully', undefined, {
+          duration: 2000
+        });
+
+        setTimeout(() => {
+          this.router.navigateByUrl(`students/${successResponse.id}`);
+        }, 2000);
+
+      },
+      (errorResponse) => {
+
+      }
+    );
+  }
+
+  uploadImage(event: any): void {
+    if(this.studentId){
+      const file: File = event.target.files[0];
+      this.studentService.uploadImage(this.student.id, file)
+      .subscribe(
+        (successResponse) => {
+            this.student.profileImageUrl = successResponse;
+            this.setImage();
+
+            this.snackbar.open('Profile Image Updated', undefined, {
+              duration: 2000
+            });
+        },
+        (errorResponse) => {
+
+        }
+      );
+    }
+  }
+
+  private setImage(): void {
+    if(this.student.profileImageUrl){
+        this.displayProfileImageUrl = this.studentService.getImagePath(this.student.profileImageUrl);
+    }
+    else{
+      this.displayProfileImageUrl = '/assets/user-512.webp';
+    }
   }
 }
